@@ -1,7 +1,5 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config(); // 👈 Ensures JWT_SECRET is loaded
+import { ENV } from "./env.js";
 
 export const generateToken = (userId, res) => {
     const { JWT_SECRET } = ENV;
