@@ -9,6 +9,7 @@ const aj = arcjet({
       mode: "LIVE",
       allow: [
         "CATEGORY:SEARCH_ENGINE",
+        "CATEGORY:TOOL",        // Allows Postman, Insomnia, etc.
       ],
     }),
     slidingWindow({
