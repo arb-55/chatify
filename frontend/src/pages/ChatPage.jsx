@@ -1,5 +1,15 @@
-const HomePage = () => {
-  return <div className="text-white text-2xl font-bold">Chat Page (Home)</div>;
-};
+import { useAuthStore } from "../store/useAuthStore";
 
-export default HomePage;
+function ChatPage(){
+  const {logout}=useAuthStore();
+  return(
+
+    <div className="z-10">
+      ChatPage
+      <button  onClick= {logout}>  logout</button>
+    </div>
+
+  );  
+}
+
+export default ChatPage;
