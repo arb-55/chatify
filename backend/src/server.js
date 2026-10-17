@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 const PORT = ENV.PORT || 3000;
 
-app.use(express.json({ limit: "5mb" })); // req.body
+app.use(express.json({ limit: "10mb" })); // req.body - increased for base64 image uploads
 app.use(
   cors({
     origin: ENV.CLIENT_URL || true,

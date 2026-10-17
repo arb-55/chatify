@@ -29,8 +29,17 @@ function MessageInput() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
+      return;
+    }
+
+    // base64 encoding inflates size ~33%, so 7MB file → ~9.3MB base64 (within 10mb limit)
+    if (file.size > 7 * 1024 * 1024) {
+      toast.error("Image is too large. Please select an image under 7MB.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
