@@ -76,11 +76,13 @@ export const useChatStore = create((set, get) => ({
 
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-      set({ messages: messages.concat(res.data) });
+      // replace the optimistic message with the real one from server
+      set({ messages: get().messages.map((m) => (m._id === tempId ? res.data : m)) });
     } catch (error) {
       // remove optimistic message on failure
-      set({ messages: messages });
-      toast.error(error.response?.data?.message || "Something went wrong");
+      set({ messages: get().messages.filter((m) => m._id !== tempId) });
+      const errMsg = error.response?.data?.message || error.response?.data?.error || "Something went wrong";
+      toast.error(errMsg);
     }
   },
 
