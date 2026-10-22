@@ -10,7 +10,6 @@ function MessageInput() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const fileInputRef = useRef(null);
-
   const { sendMessage, isSoundEnabled } = useChatStore();
 
   const handleSendMessage = (e) => {
@@ -18,12 +17,9 @@ function MessageInput() {
     if (!text.trim() && !imagePreview) return;
     if (isSoundEnabled) playRandomKeyStrokeSound();
 
-    sendMessage({
-      text: text.trim(),
-      image: imagePreview,
-    });
+    sendMessage({ text: text.trim(), image: imagePreview });
     setText("");
-    setImagePreview("");
+    setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -36,7 +32,7 @@ function MessageInput() {
       return;
     }
 
-    // base64 encoding inflates size ~33%, so 7MB file → ~9.3MB base64 (within 10mb limit)
+    // Base64 inflates ~33%; 7MB file → ~9.3MB (within 10MB backend limit)
     if (file.size > 7 * 1024 * 1024) {
       toast.error("Image is too large. Please select an image under 7MB.");
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -53,38 +49,38 @@ function MessageInput() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const canSend = text.trim() || imagePreview;
+
   return (
-    <div className="p-4 border-t border-slate-700/50">
+    <div className="composer">
+      {/* Image preview strip */}
       {imagePreview && (
-        <div className="max-w-3xl mx-auto mb-3 flex items-center">
-          <div className="relative">
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-slate-700"
-            />
+        <div className="image-preview-strip max-w-3xl mx-auto">
+          <div className="image-preview-thumb">
+            <img src={imagePreview} alt="Preview" />
             <button
-              onClick={removeImage}
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-200 hover:bg-slate-700"
               type="button"
+              className="image-preview-remove"
+              onClick={removeImage}
+              aria-label="Remove image"
             >
-              <XIcon className="w-4 h-4" />
+              <XIcon size={10} />
             </button>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex space-x-4">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            isSoundEnabled && playRandomKeyStrokeSound();
-          }}
-          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
-          placeholder="Type your message..."
-        />
+      <form onSubmit={handleSendMessage} className="composer-inner">
+        {/* Image attach button */}
+        <button
+          type="button"
+          className={`composer-btn ${imagePreview ? "active" : ""}`}
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Attach image"
+          title="Attach image"
+        >
+          <ImageIcon size={16} />
+        </button>
 
         <input
           type="file"
@@ -94,21 +90,31 @@ function MessageInput() {
           className="hidden"
         />
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
-            imagePreview ? "text-cyan-500" : ""
-          }`}
-        >
-          <ImageIcon className="w-5 h-5" />
-        </button>
+        {/* Text input */}
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            if (isSoundEnabled) playRandomKeyStrokeSound();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) handleSendMessage(e);
+          }}
+          className="composer-input"
+          placeholder="Type a message…"
+          autoComplete="off"
+        />
+
+        {/* Send button */}
         <button
           type="submit"
-          disabled={!text.trim() && !imagePreview}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg px-4 py-2 font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="composer-send"
+          disabled={!canSend}
+          aria-label="Send message"
+          title="Send (Enter)"
         >
-          <SendIcon className="w-5 h-5" />
+          <SendIcon size={15} />
         </button>
       </form>
     </div>

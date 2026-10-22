@@ -2,34 +2,663 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties ─────────────────────────────────────────────── */
+:root {
+  --bg-base: #050608;
+  --bg-surface: #0b0e14;
+  --bg-elevated: #111620;
+  --bg-border: #242b37;
+  --bg-border-subtle: #1a2030;
+  --blue: #1677ff;
+  --blue-bright: #35a7ff;
+  --blue-dim: #1155cc;
+  --blue-glow: rgba(22, 119, 255, 0.15);
+  --red: #ff1744;
+  --red-dim: #cc1236;
+  --red-glow: rgba(255, 23, 68, 0.15);
+  --text-primary: #f5f7fa;
+  --text-secondary: #929baa;
+  --text-muted: #4a5568;
+
+  /* Animated border */
+  --border-angle: 0deg;
+}
+
 @property --border-angle {
   inherits: false;
   initial-value: 0deg;
   syntax: "<angle>";
 }
 
-.input {
-  @apply w-full bg-slate-800/50 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent;
+/* ─── Base Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2e3a4d; }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Design System Component Classes ───────────────────────────────────── */
+
+/* Layout */
+.app-shell {
+  @apply flex h-screen w-screen overflow-hidden;
+  background-color: var(--bg-base);
+}
+
+/* Nav Rail */
+.nav-rail {
+  @apply flex flex-col items-center py-4 gap-1 flex-shrink-0;
+  width: 60px;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--bg-border);
+}
+
+.nav-rail-logo {
+  @apply flex items-center justify-center mb-3;
+  width: 36px;
+  height: 36px;
+}
+
+.nav-rail-item {
+  @apply relative flex items-center justify-center rounded-xl cursor-pointer transition-all duration-200;
+  width: 40px;
+  height: 40px;
+  color: var(--text-muted);
+}
+
+.nav-rail-item:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.nav-rail-item.active {
+  background-color: var(--blue-glow);
+  color: var(--blue);
+}
+
+.nav-rail-item .tooltip {
+  @apply absolute left-full ml-2 px-2 py-1 text-xs font-medium rounded-md whitespace-nowrap pointer-events-none opacity-0 translate-x-[-4px] transition-all duration-150 z-50;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--bg-border);
+}
+
+.nav-rail-item:hover .tooltip {
+  @apply opacity-100 translate-x-0;
+}
+
+/* Sidebar */
+.sidebar {
+  @apply flex flex-col flex-shrink-0 overflow-hidden;
+  width: 280px;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--bg-border);
+}
+
+.sidebar-header {
+  @apply flex items-center gap-3 px-4 py-3 flex-shrink-0;
+  border-bottom: 1px solid var(--bg-border-subtle);
+}
+
+/* Search Input */
+.search-input-wrap {
+  @apply relative flex-1;
+}
+
+.search-input {
+  @apply w-full py-2 pl-9 pr-3 text-sm rounded-lg outline-none transition-all duration-200;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+}
+
+.search-input-icon {
+  @apply absolute left-2.5 top-1/2 -translate-y-1/2;
+  color: var(--text-muted);
+  width: 15px;
+  height: 15px;
+}
+
+/* Tab Switch */
+.tab-bar {
+  @apply flex gap-1 px-3 py-2 flex-shrink-0;
+}
+
+.tab-btn {
+  @apply flex-1 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 cursor-pointer;
+  color: var(--text-muted);
+}
+
+.tab-btn:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.tab-btn.active {
+  background-color: var(--blue-glow);
+  color: var(--blue);
+}
+
+/* Conversation List Item */
+.conv-item {
+  @apply flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl cursor-pointer transition-all duration-150;
+}
+
+.conv-item:hover {
+  background-color: var(--bg-elevated);
+}
+
+.conv-item.selected {
+  background-color: var(--blue-glow);
+  border: 1px solid rgba(22, 119, 255, 0.25);
+}
+
+.conv-item.selected .conv-name {
+  color: var(--blue-bright);
+}
+
+.conv-name {
+  @apply text-sm font-medium truncate;
+  color: var(--text-primary);
+}
+
+.conv-preview {
+  @apply text-xs truncate;
+  color: var(--text-muted);
+}
+
+.conv-time {
+  @apply text-xs flex-shrink-0;
+  color: var(--text-muted);
+}
+
+/* Avatar with presence */
+.avatar-wrap {
+  @apply relative flex-shrink-0;
+}
+
+.avatar-img {
+  @apply rounded-full object-cover;
+}
+
+.presence-dot {
+  @apply absolute bottom-0 right-0 rounded-full border-2;
+  width: 10px;
+  height: 10px;
+  border-color: var(--bg-surface);
+}
+
+.presence-dot.online {
+  background-color: #22c55e;
+}
+
+.presence-dot.offline {
+  background-color: var(--bg-border);
+}
+
+/* Main Panel */
+.main-panel {
+  @apply flex flex-1 flex-col overflow-hidden;
+  background-color: var(--bg-base);
+}
+
+/* Chat Header */
+.chat-header {
+  @apply flex items-center justify-between px-5 py-3 flex-shrink-0;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--bg-border);
+  min-height: 60px;
+}
+
+/* Message Area */
+.messages-area {
+  @apply flex-1 overflow-y-auto px-5 py-6;
+}
+
+.messages-inner {
+  @apply max-w-2xl mx-auto space-y-1;
+}
+
+/* Message Bubble */
+.msg-row {
+  @apply flex items-end gap-2;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.msg-row.outgoing {
+  @apply flex-row-reverse;
+}
+
+.msg-bubble {
+  @apply px-4 py-2.5 rounded-2xl text-sm leading-relaxed max-w-[75%] break-words;
+}
+
+.msg-bubble.incoming {
+  border-bottom-left-radius: 4px;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.msg-bubble.outgoing {
+  border-bottom-right-radius: 4px;
+  background-color: var(--blue);
+  color: #fff;
+}
+
+.msg-time {
+  @apply text-[10px] mt-1 px-1;
+  color: var(--text-muted);
+}
+
+.msg-time.outgoing {
+  @apply text-right;
+}
+
+/* Date separator */
+.date-separator {
+  @apply flex items-center gap-3 my-4;
+}
+
+.date-separator-line {
+  @apply flex-1 h-px;
+  background-color: var(--bg-border-subtle);
+}
+
+.date-separator-text {
+  @apply text-xs px-2;
+  color: var(--text-muted);
+}
+
+/* Message Composer */
+.composer {
+  @apply px-4 py-3 flex-shrink-0;
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--bg-border);
+}
+
+.composer-inner {
+  @apply flex items-center gap-2 max-w-3xl mx-auto;
+}
+
+.composer-input {
+  @apply flex-1 py-2.5 px-4 text-sm rounded-xl outline-none resize-none transition-all duration-200;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  color: var(--text-primary);
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.composer-input::placeholder {
+  color: var(--text-muted);
+}
+
+.composer-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+}
+
+.composer-btn {
+  @apply flex items-center justify-center rounded-xl cursor-pointer transition-all duration-200 flex-shrink-0;
+  width: 38px;
+  height: 38px;
+  color: var(--text-muted);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+}
+
+.composer-btn:hover {
+  color: var(--text-primary);
+  border-color: #2e3a4d;
+}
+
+.composer-btn.active {
+  color: var(--blue);
+  border-color: var(--blue);
+  background-color: var(--blue-glow);
+}
+
+.composer-send {
+  @apply flex items-center justify-center rounded-xl cursor-pointer transition-all duration-200 flex-shrink-0;
+  width: 38px;
+  height: 38px;
+  background-color: var(--blue);
+  color: #fff;
+}
+
+.composer-send:hover {
+  background-color: var(--blue-bright);
+}
+
+.composer-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.composer-send:disabled:hover {
+  background-color: var(--blue);
+}
+
+/* Image preview in composer */
+.image-preview-strip {
+  @apply flex items-center gap-2 mb-2 max-w-3xl mx-auto;
+}
+
+.image-preview-thumb {
+  @apply relative rounded-lg overflow-hidden;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--bg-border);
+}
+
+.image-preview-thumb img {
+  @apply w-full h-full object-cover;
+}
+
+.image-preview-remove {
+  @apply absolute top-0.5 right-0.5 flex items-center justify-center rounded-full cursor-pointer transition-colors;
+  width: 18px;
+  height: 18px;
+  background-color: rgba(5, 6, 8, 0.8);
+  color: var(--text-secondary);
+}
+
+.image-preview-remove:hover {
+  background-color: var(--red);
+  color: #fff;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  background-color: var(--blue);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: var(--blue-bright);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+  background-color: var(--red-glow);
+  color: var(--red);
+  border: 1px solid rgba(255, 23, 68, 0.3);
+}
+
+.btn-danger:hover {
+  background-color: var(--red);
+  color: #fff;
+}
+
+/* Auth Inputs */
+.auth-input {
+  @apply w-full py-2.5 pl-10 pr-4 text-sm rounded-xl outline-none transition-all duration-200;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
 }
 
 .auth-input-icon {
-  @apply absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-5;
+  @apply absolute left-3 top-1/2 -translate-y-1/2;
+  color: var(--text-muted);
+  width: 16px;
+  height: 16px;
 }
 
-.auth-input-label {
-  @apply block text-sm font-medium text-slate-300 mb-2;
-}
-
-.auth-badge {
-  @apply inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-cyan-500/20 text-cyan-300;
+.auth-label {
+  @apply block text-xs font-medium mb-1.5;
+  color: var(--text-secondary);
 }
 
 .auth-btn {
-  @apply w-full bg-cyan-500 text-white rounded-lg py-2.5 font-medium
-  hover:bg-cyan-600 focus:ring-2 focus:ring-cyan-500;
+  @apply w-full py-2.5 text-sm font-semibold rounded-xl transition-all duration-200;
+  background-color: var(--blue);
+  color: #fff;
+}
+
+.auth-btn:hover:not(:disabled) {
+  background-color: var(--blue-bright);
+}
+
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-badge {
+  @apply inline-flex items-center px-3 py-1 text-xs font-medium rounded-full;
+  background-color: rgba(22, 119, 255, 0.12);
+  color: var(--blue-bright);
+  border: 1px solid rgba(22, 119, 255, 0.2);
 }
 
 .auth-link {
-  @apply px-4 py-2 inline-block bg-cyan-500/10 rounded-lg text-cyan-400
-  hover:text-cyan-500 text-sm transition-colors;
+  @apply text-sm transition-colors;
+  color: var(--blue-bright);
+}
+
+.auth-link:hover {
+  color: var(--blue);
+}
+
+/* Focus Room Cards */
+.room-card {
+  @apply rounded-2xl p-5 cursor-pointer transition-all duration-200;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+}
+
+.room-card:hover {
+  border-color: rgba(22, 119, 255, 0.3);
+  background-color: var(--bg-elevated);
+}
+
+.room-card.active-room {
+  border-color: rgba(22, 119, 255, 0.4);
+  box-shadow: 0 0 20px rgba(22, 119, 255, 0.06);
+}
+
+/* Focus Timer */
+.focus-timer-display {
+  @apply text-6xl font-bold tabular-nums tracking-tight;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-timer-display.running {
+  color: var(--blue-bright);
+}
+
+.focus-timer-display.paused {
+  color: var(--text-secondary);
+}
+
+/* Task Checklist */
+.task-item {
+  @apply flex items-start gap-3 py-2 rounded-lg px-2 transition-all duration-150;
+}
+
+.task-item:hover {
+  background-color: var(--bg-elevated);
+}
+
+.task-checkbox {
+  @apply flex-shrink-0 mt-0.5 rounded-md cursor-pointer transition-all duration-150;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--bg-border);
+  background-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.task-checkbox:checked {
+  background-color: var(--blue);
+  border-color: var(--blue);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.task-label {
+  @apply text-sm flex-1;
+  color: var(--text-primary);
+}
+
+.task-label.completed {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply rounded animate-pulse;
+  background-color: var(--bg-elevated);
+}
+
+/* Empty States */
+.empty-state {
+  @apply flex flex-col items-center justify-center text-center p-8;
+}
+
+.empty-state-icon {
+  @apply flex items-center justify-center rounded-2xl mb-5;
+  width: 64px;
+  height: 64px;
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.empty-state-title {
+  @apply text-base font-semibold mb-1.5;
+  color: var(--text-primary);
+}
+
+.empty-state-desc {
+  @apply text-sm max-w-xs;
+  color: var(--text-secondary);
+}
+
+/* Modal / Dialog */
+.modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  background-color: rgba(5, 6, 8, 0.8);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal-box {
+  @apply w-full max-w-md rounded-2xl p-6;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+  animation: slideUp 0.2s ease-out;
+}
+
+.modal-title {
+  @apply text-base font-semibold mb-4;
+  color: var(--text-primary);
+}
+
+/* Section heading in sidebar / panels */
+.section-label {
+  @apply text-[10px] font-semibold uppercase tracking-widest px-5 py-2;
+  color: var(--text-muted);
+}
+
+/* Badge (unread counts, status) */
+.badge-blue {
+  @apply inline-flex items-center justify-center text-[10px] font-bold rounded-full;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: var(--blue);
+  color: #fff;
+}
+
+.badge-red {
+  @apply inline-flex items-center justify-center text-[10px] font-bold rounded-full;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background-color: var(--red);
+  color: #fff;
+}
+
+/* Dev-only sample data label */
+.dev-only-badge {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full;
+  background-color: rgba(255, 23, 68, 0.1);
+  color: var(--red);
+  border: 1px solid rgba(255, 23, 68, 0.25);
+}
+
+/* Animated border container (kept from original) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

@@ -4,8 +4,26 @@ import UsersLoadingSkeleton from "./UsersLoadingSkeleton";
 import NoChatsFound from "./NoChatsFound";
 import { useAuthStore } from "../store/useAuthStore";
 
-function ChatsList() {
-  const { getMyChatPartners, chats, isUsersLoading, setSelectedUser } = useChatStore();
+// Format a timestamp for conversation list display
+function formatTime(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) {
+    return date.toLocaleDateString(undefined, { weekday: "short" });
+  }
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function ChatsList({ search = "" }) {
+  const { getMyChatPartners, chats, isUsersLoading, setSelectedUser, selectedUser } = useChatStore();
   const { onlineUsers } = useAuthStore();
 
   useEffect(() => {
@@ -13,27 +31,55 @@ function ChatsList() {
   }, [getMyChatPartners]);
 
   if (isUsersLoading) return <UsersLoadingSkeleton />;
-  if (chats.length === 0) return <NoChatsFound />;
+
+  const filtered = search.trim()
+    ? chats.filter((c) => c.fullName.toLowerCase().includes(search.toLowerCase()))
+    : chats;
+
+  if (filtered.length === 0) return <NoChatsFound />;
 
   return (
-    <>
-      {chats.map((chat) => (
-        <div
-          key={chat._id}
-          className="bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-colors"
-          onClick={() => setSelectedUser(chat)}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`avatar ${onlineUsers.includes(chat._id) ? "online" : "offline"}`}>
-              <div className="size-12 rounded-full">
-                <img src={chat.profilePic || "/avatar.png"} alt={chat.fullName} />
-              </div>
+    <div className="space-y-0.5 py-1">
+      {filtered.map((chat) => {
+        const isOnline = onlineUsers.includes(chat._id);
+        const isSelected = selectedUser?._id === chat._id;
+
+        return (
+          <div
+            key={chat._id}
+            className={`conv-item ${isSelected ? "selected" : ""}`}
+            onClick={() => setSelectedUser(chat)}
+          >
+            {/* Avatar */}
+            <div className="avatar-wrap">
+              <img
+                src={chat.profilePic || "/avatar.png"}
+                alt={chat.fullName}
+                className="avatar-img"
+                style={{ width: 40, height: 40 }}
+              />
+              <span className={`presence-dot ${isOnline ? "online" : "offline"}`} />
             </div>
-            <h4 className="text-slate-200 font-medium truncate">{chat.fullName}</h4>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="conv-name">{chat.fullName}</span>
+                {isOnline && (
+                  <span
+                    className="text-[10px] flex-shrink-0 font-medium"
+                    style={{ color: "#22c55e" }}
+                  >
+                    Online
+                  </span>
+                )}
+              </div>
+              <p className="conv-preview mt-0.5">Tap to open conversation</p>
+            </div>
           </div>
-        </div>
-      ))}
-    </>
+        );
+      })}
+    </div>
   );
 }
 export default ChatsList;
