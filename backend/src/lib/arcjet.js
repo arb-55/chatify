@@ -2,30 +2,26 @@ import arcjet, { shield, detectBot, slidingWindow } from "@arcjet/node";
 
 import { ENV } from "./env.js";
 
-const isDev = ENV.ARCJET_ENV === "development";
-
 const aj = arcjet({
   key: ENV.ARCJET_KEY,
   rules: [
     // Shield protects your app from common attacks e.g. SQL injection
     shield({ mode: "DRY_RUN" }), // DRY_RUN: logs but doesn't block (LIVE mode blocks base64 image payloads)
-    // Create a bot detection rule
+
+    // Bot detection in DRY_RUN so real browsers are never falsely blocked.
+    // The slidingWindow rate limiter below still protects against abuse.
     detectBot({
-      // DRY_RUN in development so local browsers are never blocked
-      // Switch to LIVE in production to actively block bots
-      mode: isDev ? "DRY_RUN" : "LIVE",
-      // Block all bots except the following
+      mode: "DRY_RUN", // Logs bot activity without blocking
       allow: [
         "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
-        // Uncomment to allow these other common bot categories
-        // See the full list at https://arcjet.com/bot-list
-        //"CATEGORY:MONITOR", // Uptime monitoring services
-        //"CATEGORY:PREVIEW", // Link previews e.g. Slack, Discord
+        // "CATEGORY:MONITOR",  // Uptime monitoring services
+        // "CATEGORY:PREVIEW",  // Link previews e.g. Slack, Discord
       ],
     }),
-    // Create a token bucket rate limit. Other algorithms are supported.
+
+    // Rate limiting: max 100 requests per 60 seconds per IP
     slidingWindow({
-      mode: "LIVE", // Blocks requests. Use "DRY_RUN" to log only
+      mode: "LIVE", // Actively blocks excessive requests
       max: 100,
       interval: 60,
     }),
